@@ -1,3 +1,4 @@
+
 package ec.edu.espe.pa.nexusia.controller;
 
 import ec.edu.espe.pa.nexusia.dto.TareaRequestDTO;
@@ -7,9 +8,10 @@ import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/tareas")
@@ -45,8 +47,10 @@ public class TareaController {
     ) {
         TareaResponseDTO tarea = service.crear(dto);
 
+        URI location = URI.create("/api/tareas/" + tarea.id());
+
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .created(location)
                 .body(tarea);
     }
 
