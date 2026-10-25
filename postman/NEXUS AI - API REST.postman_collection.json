@@ -1,0 +1,536 @@
+{
+  "info": {
+    "_postman_id": "9190dd78-bf74-47fa-9956-21a5661d8d11",
+    "name": "NEXUS AI - API REST",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54204316",
+    "_collection_link": "https://go.postman.co/collection/54204316-9190dd78-bf74-47fa-9956-21a5661d8d11?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Pruebas positivas",
+      "item": [
+        {
+          "name": "E1 - Crear tarea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"E1 - Responde HTTP 201\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\npm.test(\"E1 - Devuelve el codigo correcto\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.codigo).to.eql(\r\n        pm.collectionVariables.get(\"codigoTarea\")\r\n    );\r\n});\r\n\r\npm.test(\"E1 - Genera un ID\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.id).to.be.a(\"number\");\r\n});\r\n\r\npm.test(\"E1 - Registra las fechas de auditoria\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.creadoEn).to.exist;\r\n    pm.expect(json.actualizadoEn).to.exist;\r\n});\r\n\r\nif (pm.response.code === 201) {\r\n    const json = pm.response.json();\r\n\r\n    pm.collectionVariables.set(\"tareaId\", json.id);\r\n}\r\n"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const codigo = \"TAR-\" + Date.now();\r\n\r\npm.collectionVariables.set(\"codigoTarea\", codigo);\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"codigo\": \"{{codigoTarea}}\",\r\n  \"titulo\": \"Diseñar interfaz de NEXUS AI\",\r\n  \"descripcion\": \"Crear la interfaz principal del sistema\",\r\n  \"horasEstimadas\": 6.5,\r\n  \"prioridad\": \"ALTA\",\r\n  \"estado\": \"PENDIENTE\",\r\n  \"fechaEntrega\": \"2026-12-15\",\r\n  \"completada\": false\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8083/api/tareas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E2 - Consultar tarea por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"E2 - Responde HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"E2 - Devuelve el ID solicitado\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.id).to.eql(\r\n        Number(pm.collectionVariables.get(\"tareaId\"))\r\n    );\r\n});\r\n\r\npm.test(\"E2 - Devuelve los datos de la tarea\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.titulo).to.eql(\"Diseñar interfaz de NEXUS AI\");\r\n    pm.expect(json.prioridad).to.eql(\"ALTA\");\r\n    pm.expect(json.estado).to.eql(\"PENDIENTE\");\r\n});\r\n\r\npm.test(\"E2 - Incluye las fechas de auditoria\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.creadoEn).to.exist;\r\n    pm.expect(json.actualizadoEn).to.exist;\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/tareas/{{tareaId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas",
+                "{{tareaId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E3 - Listar tareas con paginación",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"E3 - Responde HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"E3 - Devuelve una lista de tareas\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.content).to.be.an(\"array\");\r\n});\r\n\r\npm.test(\"E3 - Respeta el tamaño de pagina\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.size).to.eql(5);\r\n    pm.expect(json.content.length).to.be.at.most(5);\r\n});\r\n\r\npm.test(\"E3 - Devuelve la primera pagina\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.number).to.eql(0);\r\n});\r\n\r\npm.test(\"E3 - Incluye informacion de paginacion\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.totalElements).to.be.a(\"number\");\r\n    pm.expect(json.totalPages).to.be.a(\"number\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/tareas?page=0&size=5",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E4 - Buscar tareas por título",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "\r\npm.test(\"E4 - Responde HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"E4 - Devuelve una lista de resultados\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.content).to.be.an(\"array\");\r\n    pm.expect(json.content.length).to.be.greaterThan(0);\r\n});\r\n\r\npm.test(\"E4 - Los titulos contienen la palabra buscada\", function () {\r\n    const json = pm.response.json();\r\n\r\n    json.content.forEach(function (tarea) {\r\n        pm.expect(tarea.titulo.toLowerCase()).to.include(\"interfaz\");\r\n    });\r\n});\r\n\r\npm.test(\"E4 - Respeta la paginacion\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.number).to.eql(0);\r\n    pm.expect(json.size).to.eql(5);\r\n    pm.expect(json.content.length).to.be.at.most(5);\r\n});\r\n\r\npm.test(\"E4 - Incluye el total de resultados\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.totalElements).to.be.a(\"number\");\r\n    pm.expect(json.totalElements).to.be.greaterThan(0);\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/tareas/buscar?titulo=Diseñar&page=0&size=5",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas",
+                "buscar"
+              ],
+              "query": [
+                {
+                  "key": "titulo",
+                  "value": "Diseñar"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E5 - Actualizar tarea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"E5 - Responde HTTP 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"E5 - Mantiene el ID de la tarea\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.id).to.eql(\r\n        Number(pm.collectionVariables.get(\"tareaId\"))\r\n    );\r\n});\r\n\r\npm.test(\"E5 - Actualiza el titulo\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.titulo).to.eql(\r\n        \"Diseñar interfaz final de NEXUS AI\"\r\n    );\r\n});\r\n\r\npm.test(\"E5 - Actualiza las horas y el estado\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.horasEstimadas).to.eql(8);\r\n    pm.expect(json.estado).to.eql(\"EN_PROGRESO\");\r\n    pm.expect(json.completada).to.eql(false);\r\n});\r\n\r\npm.test(\"E5 - Conserva el codigo de la tarea\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.codigo).to.eql(\r\n        pm.collectionVariables.get(\"codigoTarea\")\r\n    );\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"codigo\": \"{{codigoTarea}}\",\r\n  \"titulo\": \"Diseñar interfaz final de NEXUS AI\",\r\n  \"descripcion\": \"Actualizar la interfaz principal del sistema\",\r\n  \"horasEstimadas\": 8.0,\r\n  \"prioridad\": \"ALTA\",\r\n  \"estado\": \"EN_PROGRESO\",\r\n  \"fechaEntrega\": \"2026-12-20\",\r\n  \"completada\": false\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8083/api/tareas/{{tareaId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas",
+                "{{tareaId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E6 - Eliminar tarea",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"E6 - Responde HTTP 204\", function () {\r\n    pm.response.to.have.status(204);\r\n});\r\n\r\npm.test(\"E6 - No devuelve contenido\", function () {\r\n    pm.expect(pm.response.text()).to.eql(\"\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/tareas/{{tareaId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas",
+                "{{tareaId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pruebas negativas",
+      "item": [
+        {
+          "name": "N1 - Consultar tarea inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"N1 - Responde HTTP 404\", function () {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"N1 - Devuelve el error Not Found\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.status).to.eql(404);\r\n    pm.expect(json.error).to.eql(\"Not Found\");\r\n});\r\n\r\npm.test(\"N1 - Identifica la tarea inexistente\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.message).to.include(\"999999\");\r\n    pm.expect(json.path).to.eql(\"/api/tareas/999999\");\r\n});\r\n\r\npm.test(\"N1 - Mantiene la estructura de ErrorResponse\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.timestamp).to.exist;\r\n    pm.expect(json.details).to.be.an(\"object\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/tareas/999999",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas",
+                "999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N2 - Validar campos obligatorios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"N2 - Responde HTTP 400\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"N2 - Devuelve Bad Request\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.status).to.eql(400);\r\n    pm.expect(json.error).to.eql(\"Bad Request\");\r\n});\r\n\r\npm.test(\"N2 - Identifica los tres campos invalidos\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.details).to.have.property(\"codigo\");\r\n    pm.expect(json.details).to.have.property(\"titulo\");\r\n    pm.expect(json.details).to.have.property(\"horasEstimadas\");\r\n});\r\n\r\npm.test(\"N2 - Devuelve los mensajes de validacion\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.details.codigo)\r\n        .to.eql(\"El código es obligatorio\");\r\n\r\n    pm.expect(json.details.titulo)\r\n        .to.eql(\"El título es obligatorio\");\r\n\r\n    pm.expect(json.details.horasEstimadas)\r\n        .to.eql(\"Las horas deben ser mayores a cero\");\r\n});\r\n\r\npm.test(\"N2 - Mantiene la estructura ErrorResponse\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.timestamp).to.exist;\r\n    pm.expect(json.path).to.eql(\"/api/tareas\");\r\n    pm.expect(json.details).to.be.an(\"object\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"codigo\": \"\",\r\n  \"titulo\": \"\",\r\n  \"descripcion\": \"Prueba de campos obligatorios\",\r\n  \"horasEstimadas\": 0,\r\n  \"prioridad\": \"ALTA\",\r\n  \"estado\": \"PENDIENTE\",\r\n  \"fechaEntrega\": \"2026-12-15\",\r\n  \"completada\": false\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8083/api/tareas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N3 - Validar código duplicado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"N3 - Responde HTTP 409\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"N3 - Devuelve Conflict\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.status).to.eql(409);\r\n    pm.expect(json.error).to.eql(\"Conflict\");\r\n});\r\n\r\npm.test(\"N3 - Identifica el codigo duplicado\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.message)\r\n        .to.eql(\"Ya existe una tarea con el código TAR-409\");\r\n});\r\n\r\npm.test(\"N3 - Identifica la ruta\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.path).to.eql(\"/api/tareas\");\r\n});\r\n\r\npm.test(\"N3 - Mantiene la estructura ErrorResponse\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.timestamp).to.exist;\r\n    pm.expect(json.details).to.be.an(\"object\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"codigo\": \"TAR-409\",\r\n  \"titulo\": \"Intento de registro duplicado\",\r\n  \"descripcion\": \"Verificar que no se permita repetir un codigo\",\r\n  \"horasEstimadas\": 4.5,\r\n  \"prioridad\": \"MEDIA\",\r\n  \"estado\": \"PENDIENTE\",\r\n  \"fechaEntrega\": \"2026-12-15\",\r\n  \"completada\": false\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8083/api/tareas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N4 - Validar regla de negocio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"N4 - Responde HTTP 422\", function () {\r\n    pm.response.to.have.status(422);\r\n});\r\n\r\npm.test(\"N4 - Devuelve Unprocessable Entity\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.status).to.eql(422);\r\n    pm.expect(json.error).to.eql(\"Unprocessable Entity\");\r\n});\r\n\r\npm.test(\"N4 - Identifica la regla de negocio\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.message).to.eql(\r\n        \"El estado COMPLETADA debe coincidir con el valor de completada\"\r\n    );\r\n});\r\n\r\npm.test(\"N4 - Identifica la ruta\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.path).to.eql(\"/api/tareas\");\r\n});\r\n\r\npm.test(\"N4 - Mantiene la estructura ErrorResponse\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.timestamp).to.exist;\r\n    pm.expect(json.details).to.be.an(\"object\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"codigo\": \"TAR-N4-001\",\r\n  \"titulo\": \"Validar coherencia del estado\",\r\n  \"descripcion\": \"Prueba de una regla de negocio\",\r\n  \"horasEstimadas\": 3.5,\r\n  \"prioridad\": \"ALTA\",\r\n  \"estado\": \"COMPLETADA\",\r\n  \"fechaEntrega\": \"2026-12-15\",\r\n  \"completada\": false\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8083/api/tareas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N5 - Método HTTP no permitido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"N5 - Responde HTTP 405\", function () {\r\n    pm.response.to.have.status(405);\r\n});\r\n\r\npm.test(\"N5 - Devuelve Method Not Allowed\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.status).to.eql(405);\r\n    pm.expect(json.error).to.eql(\"Method Not Allowed\");\r\n});\r\n\r\npm.test(\"N5 - Identifica el metodo no permitido\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.message).to.eql(\r\n        \"El método HTTP no está permitido para esta ruta\"\r\n    );\r\n});\r\n\r\npm.test(\"N5 - Identifica la ruta solicitada\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.path).to.eql(\"/api/tareas/999999\");\r\n});\r\n\r\npm.test(\"N5 - Mantiene la estructura ErrorResponse\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.timestamp).to.exist;\r\n    pm.expect(json.details).to.be.an(\"object\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/tareas/999999",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas",
+                "999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N6 - Validar JSON mal formado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"N6 - Responde HTTP 400\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"N6 - Devuelve Bad Request\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.status).to.eql(400);\r\n    pm.expect(json.error).to.eql(\"Bad Request\");\r\n});\r\n\r\npm.test(\"N6 - Identifica el JSON inválido\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.message).to.eql(\r\n        \"El cuerpo de la solicitud contiene datos inválidos\"\r\n    );\r\n});\r\n\r\npm.test(\"N6 - Identifica la ruta\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.path).to.eql(\"/api/tareas\");\r\n});\r\n\r\npm.test(\"N6 - Mantiene la estructura ErrorResponse\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json).to.have.all.keys(\r\n        \"timestamp\",\r\n        \"status\",\r\n        \"error\",\r\n        \"message\",\r\n        \"path\",\r\n        \"details\"\r\n    );\r\n\r\n    pm.expect(json.timestamp).to.be.a(\"string\");\r\n    pm.expect(json.details).to.be.an(\"object\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"codigo\": \"TAR-N6-002\",\r\n  \"titulo\": \"Prueba de JSON incorrecto\"\r\n  \"descripcion\": \"Validar errores de sintaxis\",\r\n  \"horasEstimadas\": 3.5,\r\n  \"prioridad\": \"MEDIA\",\r\n  \"estado\": \"PENDIENTE\",\r\n  \"fechaEntrega\": \"2026-12-15\",\r\n  \"completada\": false\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8083/api/tareas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "N7 - Validar tipo de dato incorrecto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"N7 - Responde HTTP 400\", function () {\r\n    pm.response.to.have.status(400);\r\n});\r\n\r\npm.test(\"N7 - Devuelve Bad Request\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.status).to.eql(400);\r\n    pm.expect(json.error).to.eql(\"Bad Request\");\r\n});\r\n\r\npm.test(\"N7 - Rechaza el tipo de dato incorrecto\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.message).to.eql(\r\n        \"El cuerpo de la solicitud contiene datos inválidos\"\r\n    );\r\n});\r\n\r\npm.test(\"N7 - Identifica la ruta\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json.path).to.eql(\"/api/tareas\");\r\n});\r\n\r\npm.test(\"N7 - Mantiene la estructura ErrorResponse\", function () {\r\n    const json = pm.response.json();\r\n\r\n    pm.expect(json).to.have.all.keys(\r\n        \"timestamp\",\r\n        \"status\",\r\n        \"error\",\r\n        \"message\",\r\n        \"path\",\r\n        \"details\"\r\n    );\r\n\r\n    pm.expect(json.timestamp).to.be.a(\"string\");\r\n    pm.expect(json.details).to.be.an(\"object\");\r\n});\r\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"codigo\": \"TAR-N7-001\",\r\n  \"titulo\": \"Validar tipos de datos\",\r\n  \"descripcion\": \"Comprobar el rechazo de tipos incorrectos\",\r\n  \"horasEstimadas\": \"texto_invalido\",\r\n  \"prioridad\": \"MEDIA\",\r\n  \"estado\": \"PENDIENTE\",\r\n  \"fechaEntrega\": \"2026-12-15\",\r\n  \"completada\": false\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8083/api/tareas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8083",
+              "path": [
+                "api",
+                "tareas"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "codigoTarea",
+      "value": ""
+    },
+    {
+      "key": "tareaId",
+      "value": ""
+    }
+  ]
+}
